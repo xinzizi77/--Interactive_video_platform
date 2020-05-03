@@ -152,7 +152,7 @@
       text-align: center;
     }
 
-    .main-wrapper .right #content-wrapper .img-wrapper .icon {
+    .main-wrapper .right #content-wrapper .img-wrapper .icon-jia {
       position: absolute;
       bottom: -10px;
       right: 10px;
@@ -199,6 +199,44 @@
       height: 1px;
       background-color: rgb(110, 110, 110);
     }
+
+    .icon-edit {
+      display: inline-block;
+      position: absolute;
+      bottom: -10px;
+      right: -10px;
+    }
+
+    .but {
+      border: 1px solid transparent;
+      padding: .375rem .75rem;
+      border-radius: .25rem;
+      transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+
+    .btn-cancel {
+      color: #fff;
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+
+    .btn-cancel:hover {
+      color: #fff;
+      background-color: #5a6268;
+      border-color: #545b62;
+    }
+
+    .btn-save {
+      color: #fff;
+      background-color: rgb(238, 122, 55);
+      border-color: rgb(238, 122, 55);
+    }
+
+    .btn-save:hover {
+      color: #fff;
+      background-color: rgb(247, 110, 30);
+      border-color: rgba(250, 119, 44, 0.925);
+    }
   </style>
 </head>
 
@@ -220,15 +258,67 @@
       <div class="title">时间轴</div>
       <div class="content p-5">
         <div id="content-wrapper">
-          <div class="branch position-relative" id="head-branch">
+          <div class="branch position-relative" id="head-branch" data-question="是否继续学习"
+            data-answer='{"answerA":"是","answerB":"否"}'>
             <div class="branch-content">
               <div class="img-wrapper">
                 <img src="" alt="">
                 <span class="head-text">片头</span>
                 <span class="icon icon-jia"><i class="iconfont icon-jia1"></i></span>
+                <img src="images/editor.svg" alt="" class="img-fliud icon-edit d-none" data-toggle="modal"
+                  data-target="#modal-edit">
+                <img src="images/fold.svg" alt="" class="img-fluid position-absolute d-none icon-fold"
+                  style="top: 56%;right: 0;transform: rotate(45deg);z-index: 99;">
+                <img src="images/open.svg" alt="" class="img-fluid position-absolute d-none icon-open"
+                  style="top: 56%;right: 0;transform: rotate(45deg);z-index: 99;">
               </div>
               <p class="text">拖入视频</p>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="modal-edit">
+      <div class="modal-dialog ">
+        <div class="modal-content with-box-shadow p-3 bg-white text-center font-size-small"
+          style="border-radius: 4px;border: 0;width: 400px;height: auto;">
+          <div class="modal-body">
+            <div class="py-3 border-bottom font-weight-bolder">选项分支编辑</div>
+            <div class="form-group pt-3">
+              <label for="question">选项问题</label>
+              <input type="text" class="ml-3 border-radius pl-3 w-75" id="question" placeholder="选填">
+            </div>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>选项</th>
+                  <th>选项内容</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>A</td>
+                  <td><input type="text" name="" id="answerA" placeholder="选填" class="pl-3"></td>
+                </tr>
+                <tr>
+                  <td>B</td>
+                  <td><input type="text" name="" id="answerB" placeholder="选填" class="pl-3"></td>
+                </tr>
+                <tr>
+                  <td>C</td>
+                  <td><input type="text" name="" id="answerC" placeholder="选填" class="pl-3"></td>
+                </tr>
+                <tr>
+                  <td>D</td>
+                  <td><input type="text" name="" id="answerD" placeholder="选填" class="pl-3"></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="font-size-tiny text-gray-7">注：选项顺序按分支顺序对应</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="but btn-cancel" data-dismiss="modal">取消</button>
+            <button type="button" class="but btn-save" id="question-save">保存</button>
           </div>
         </div>
       </div>
@@ -253,7 +343,7 @@
     $("#imgData").click(function () {
       $upFile.click();
       $upFile.off("change").on('change', (function () {
-        console.log(oFile.files.length);
+        // console.log(oFile.files.length);
         for (let i = 0; i < oFile.files.length; i++) {
           upFile(oFile.files[i]);
         }
@@ -315,37 +405,104 @@
       });
     }
 
-    let addBranch = function () {
-      $('#content-wrapper').on('click', '.icon-jia', function (event) {
-        let _this = $(this);
-        let parentBranch = _this.parent().parent().parent();
-        console.log(parentBranch.find('.branch').find('.line'))
 
-        switch (parentBranch.find('.branch').length) {
-          case 0: branchLocation(parentBranch); break;
-          case 1: changeLocation(parentBranch.find('.branch').eq(0), "80px", '-40','90%');
-          branchLocation(parentBranch);
-          changeLocation(parentBranch.find('.branch').eq(1), "-80px", '40','10%'); break;
-          case 2: changeLocation(parentBranch.find('.branch').eq(0), "80px", '-40','90%');
-          branchLocation(parentBranch);branchLocation(parentBranch);
-          changeLocation(parentBranch.find('.branch').eq(2), "-80px", '40','10%'); break;
+    // -----------------------------------------分支逻辑开始--------------------------------------------------------
+    //  添加分支
+    $('#content-wrapper').on('click', '.icon-jia', function (event) {
+      let _this = $(this);
+      let parentBranch = _this.parent().parent().parent();
+      // console.log(parentBranch.siblings().not('.branch-content').find('.icon-open'))
+
+      for (let i = 0; i < parentBranch.siblings().not('.branch-content').length; i++) {
+        if (parentBranch.siblings().not('.branch-content').eq(i).find('.branch').length > 0) {
+          foldBranch(parentBranch.siblings().not('.branch-content').eq(i).find('.icon-fold').eq(0))
         }
+      }
 
-        // branchLocation(parentBranch)
-        // let bottm = 0;
-        // let left = parseInt(parentBranch.css('left')) + 253;
-        event.stopPropagation();
-      });
+      openBranch(_this.next().next().next())
+      parentBranch.find('.icon-edit').eq(0).removeClass('d-none');
+      parentBranch.find('.icon-fold').eq(0).removeClass('d-none');
+      parentBranch.find('.icon-open').eq(0).addClass('d-none');
+
+      branchLocation(parentBranch);
+      exchangeBranch(parentBranch);
+
+      event.stopPropagation();
+    });
+
+    //  整理不同分支位置
+    let exchangeBranch = function (parentBranch) {
+      switch (parentBranch.children('.branch').length) {
+        case 1: changeLocation(parentBranch.children('.branch').eq(0), "0px", '0', '50%'); break;
+        case 2: changeLocation(parentBranch.children('.branch').eq(0), "80px", '-40', '90%');
+          changeLocation(parentBranch.children('.branch').eq(1), "-80px", '40', '10%'); break;
+        case 3: changeLocation(parentBranch.children('.branch').eq(0), "140px", '-33', '100%');
+          changeLocation(parentBranch.children('.branch').eq(1), "0px", '0', '50%');
+          changeLocation(parentBranch.children('.branch').eq(2), "-140px", '38', '1%');
+          break;
+        case 4: changeLocation(parentBranch.children('.branch').eq(0), "225px", '-50', '129%');
+          changeLocation(parentBranch.children('.branch').eq(1), "74px", '-50', '87%');
+          changeLocation(parentBranch.children('.branch').eq(2), "-72px", '50', '30%');
+          changeLocation(parentBranch.children('.branch').eq(3), "-220px", '50', '-13%');
+      }
+    }
+    //  给分支收缩绑定点击事件
+    $('#content-wrapper ').on('click', '.icon-fold', function (event) {
+      let _this = $(this);
+      foldBranch($(_this));
+      event.stopPropagation();
+    })
+
+    //  给分支展开绑定点击事件
+    $('#content-wrapper').on('click', '.icon-open', function (event) {
+      let _this = $(this);
+      let parentBranch = _this.parent().parent().parent();
+      openBranch(_this);
+      for (let i = 0; i < parentBranch.siblings().not('.branch-content').length; i++) {
+        if (parentBranch.siblings().not('.branch-content').eq(i).find('.branch').length > 0) {
+          // console.log(parentBranch.siblings().not('.branch-content').eq(i).find('.icon-fold').eq(0))
+          foldBranch(parentBranch.siblings().not('.branch-content').eq(i).find('.icon-fold').eq(0))
+        }
+      }
+      event.stopPropagation();
+    });
+
+    //  分支收缩
+    let foldBranch = function (_this) {
+      let parentBranch = _this.parent().parent().parent();
+      parentBranch.find('.branch-content').eq(0).siblings().addClass('d-none');
+      _this.addClass('d-none')
+      _this.removeClass('d-block')
+      parentBranch.find('.icon-open').eq(0).addClass('d-block');
+    };
+
+    //  分支展开
+    let openBranch = function (_this) {
+      let parentBranch = _this.parent().parent().parent();
+      parentBranch.find('.branch-content').eq(0).siblings().removeClass('d-none');
+
+      _this.removeClass('d-block')
+
+      parentBranch.find('.icon-fold').eq(0).addClass('d-block');
     };
 
     // 根据位置添加分支
     let branchLocation = function (parentBranch) {
       parentBranch.append(`
-                    <div class="branch position-absolute" style="bottom:0px;left:233px">
+                    <div class="branch position-absolute" style="bottom:0px;left:233px" data-question=""
+            data-answer=''>
                             <div class="branch-content">
                                 <div class="img-wrapper">
                                     <img src="" alt="">
                                     <span class="icon icon-jia"><i class="iconfont icon-jia1"></i></span>
+                                    <img src="images/del.svg" alt="" class="img-fluid position-absolute icon-del"
+                  style="top: 5%;right: 5%;">
+                                    <img src="images/editor.svg" alt="" class="img-fliud icon-edit d-none" data-toggle="modal"
+                  data-target="#modal-edit">
+                <img src="images/fold.svg" alt="" class="img-fluid position-absolute d-none icon-fold"
+                  style="top: 56%;right: 0;transform: rotate(45deg);z-index: 99;">
+                <img src="images/open.svg" alt="" class="img-fluid position-absolute d-none icon-open"
+                  style="top: 56%;right: 0;transform: rotate(45deg);z-index: 99;">
                                 </div>
                                 <p class="text">拖入视频</p>
                                 <div class="line position-absolute" style="transform:rotate(0deg)"></div>
@@ -354,14 +511,12 @@
                     `)
     }
 
-    // 超过一个位置调整之前分支的位置
+    //  超过一个位置调整之前分支的位置
     let changeLocation = function (branch, bottom, rotate, lTop) {
-      console.log(branch)
-      branch.css('bottom',bottom);
-      branch.find('.line').css({'transform':`rotate(${rotate}deg)`,'top':lTop})
+      // console.log(branch)
+      branch.css('bottom', bottom);
+      branch.find('.line').eq(0).css({ 'transform': `rotate(${rotate}deg)`, 'top': lTop })
     }
-
-    addBranch();
 
     //  拖拽功能封装
     let ondragMove = function (dv) {
@@ -410,9 +565,75 @@
       }
     };
     ondragMove(oContentWrapper);
+
+    //  点击编辑填写问题和答案
+    $('#content-wrapper').on('click', '.icon-edit', function (event) {
+      let _this = $(this);
+      let parentBranch = _this.parent().parent().parent();
+      $('#question').val(parentBranch.data('question') ? parentBranch.data('question') : '');
+      $('#answerA').val(parentBranch.data('answer').answerA ? parentBranch.data('answer').answerA : '');
+      $('#answerB').val(parentBranch.data('answer').answerB ? parentBranch.data('answer').answerB : '');
+      $('#answerC').val(parentBranch.data('answer').answerC ? parentBranch.data('answer').answerC : '');
+      $('#answerD').val(parentBranch.data('answer').answerD ? parentBranch.data('answer').answerD : '');
+
+      $('#question-save').unbind('click').on('click', function () {
+        $('#modal-edit').modal('hide');
+        parentBranch.attr("data-question", $('#question').val());
+        parentBranch.attr("data-answer", `{"answerA":${$('#answerA').val()},"answerB":${$('#answerB').val()},"answerC":${$('#answerC').val()},"answerD":${$('#answerD').val()}}`);
+
+        // console.log(`{"answerA":${$('#answerA').val()},"answerB":${$('#answerB').val()},"answerC":${$('#answerC').val()},"answerD":${$('#answerD').val()}}`,parentBranch)
+      })
+
+      // event.stopPropagation();
+    });
+
+    //  删除分支
+    $('#content-wrapper').on('click', '.icon-del', function (event) {
+      let _this = $(this);
+      let parentBranch = _this.parent().parent().parent();
+      let grandparentBranch = _this.parent().parent().parent().parent();
+
+      parentBranch.remove();
+      exchangeBranch(grandparentBranch);
+      event.stopPropagation();
+    });
+
+    // -----------------------------------------分支逻辑结束--------------------------------------------------------
+
+
+    // -----------------------------------------视频逻辑开始--------------------------------------------------------
+    /* 拖动时触发*/
+    document.addEventListener("dragstart", function (event) {
+      console.log(event);
+      //dataTransfer.setData()方法设置数据类型和拖动的数据
+      event.dataTransfer.setData("video", event.target.id);
+    });
+    /* 拖动完成后触发 */
+    document.addEventListener("dragenter", function (event) {
+      // console.log(event)
+      // if (event.target.className == "droptarget") {
+      //   event.target.style.border = "3px dotted red";
+      // }
+    });
+    // 默认情况下,数据/元素不能在其他元素中被拖放。对于drop我们必须防止元素的默认处理
+    document.addEventListener("dragover", function (event) {
+      event.preventDefault();
+    });
+    // 当可拖放的p元素离开droptarget，重置div的边框样式
+    document.addEventListener("dragleave", function (event) {
+      // console.log(event);
+    });
+    /*对于drop,防止浏览器的默认处理数据(在drop中链接是默认打开)
+    复位输出文本的颜色和DIV的边框颜色
+    利用dataTransfer.getData()方法获得拖放数据
+    拖拖的数据元素id(“drag1”)
+    拖拽元素附加到drop元素*/
+    document.addEventListener("drop", function (event) {
+      console.log(event);
+      event.preventDefault();
+    });
+
   };
-
-
 </script>
 
 </html>
