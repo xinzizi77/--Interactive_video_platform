@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ch">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" type="text/css" href="./common.css">
+  <title>video demo</title>
+</head>
+
+<body>
+  <h1 id="title">交互式视频平台demo</h1>
+  <div class="video-wrapper">
+    <video src="" poster="" controls id="video" autoplay></video>
+    <div class="select-wrapper">
+      <ul>
+        <li>
+          <div class="text">片头</div>
+          <img src="./images/position.png" data-src="" class="icon" />
+        </li>
+      </ul>
+    </div>
+    <div class="option-wrapper">
+      <div class="question" id="question"></div>
+      <ul class="clearfix" id="answer">
+      </ul>
+    </div>
+  </div>
+</body>
+<script src="https://neveragain.allstatics.com/2019/assets/vendor/wsc-vendor.js"></script>
+<script src="https://neveragain.allstatics.com/2019/assets/script/wsc-override-ws.js"></script>
+<script src="https://neveragain.allstatics.com/2019/assets/script/wsc-common.js"></script>
+<script>$(function () { wsc.common.init() })</script>
+<script>
+    (function () {
+      let oVideo, oVideoWrapper, oSelectBtn, oText;
+      let scale = 0.8;
+      let flag = true;
+
+      //  读取互动视频数据
+      let allBranch = window.localStorage.getItem('video');
+      allBranch = $.parseJSON(allBranch);
+
+      //  设置片头视频
+      $('#video').attr('src', allBranch.src);
+      $('.select-wrapper img').attr('data-allBranch', JSON.stringify(allBranch));
+      $('.select-wrapper img').attr('data-src', allBranch.src);
+      let currImg = 0;
+
+      let initialize = function () {
+        oVideo = document.getElementById('video');
+        oVideoWrapper = document.getElementsByClassName('video-wrapper')[0];
+        oSelectWrapper = document.getElementsByClassName('select-wrapper')[0];
+        aSelectIcon = oSelectWrapper.getElementsByTagName('li');
+        oOption = oVideoWrapper.getElementsByClassName('option-wrapper')[0];
+        aOption = oOption.getElementsByTagName('li');
+
+        oVideoWrapper.onmouseover = function () {
+          oSelectWrapper.style.visibility = 'visible';
+        };
+
+        oVideoWrapper.onmouseout = function () {
+          oSelectWrapper.style.visibility = 'hidden';
+        };
+
+        refreshSelect();
+        caluSelectPosition();
+        oVideo.addEventListener('ended', choice);
+      };
+      // -------------------------------------------------------------------------------------
+
+      function refreshSelect() {
+        for (let i = 0; i < aSelectIcon.length; i++) {
+          let oText = aSelectIcon[i].getElementsByClassName('text')[0];
+          aSelectIcon[i].onmouseover = function () {
+            oText.style.display = 'block'
+          };
+          aSelectIcon[i].onmouseout = function () {
+            oText.style.display = 'none';
+          };
+          aSelectIcon[i].onclick = function () {
+            $('.video-wrapper .select-wrapper li img').attr('src', "./images/tick.png");
+            let oImg = aSelectIcon[i].getElementsByTagName('img')[0];
+            oImg.src = "./images/position.png";
+            oVideo.src = oImg.getAttribute('data-src');
+            let branchData = $('.select-wrapper img').eq(i).attr('data-allBranch');
+            allBranch = $.parseJSON(branchData);
+            currImg = i;
+          }
+        }
+      }
+      // -------------------------------------------------------------------------------------
+      // 设置select按钮的居中位置
+      function caluSelectPosition() {
+        let videoWidth = oVideo.clientWidth;
+        let width = (videoWidth - oSelectWrapper.clientWidth) / 2;
+        oSelectWrapper.style.left = `${width}px`;
+      };
+      // -------------------------------------------------------------------------------------
+
+      let choice = function () {
+        oVideo = document.getElementById('video');
+        $('#question').html(allBranch.question);
+        getAnwser($('#answer'), allBranch);
+        if (allBranch.answerA) {
+          oOption.style.display = 'block';
+          oSelectWrapper.style.display = 'none';
+          oVideo.controls = false;
+          $('#answer li').each(function (index, li) {
+            let _this = $(this);
+
+            _this.on('click', function () {
+              let flagBranch;
+              switch (index) {
+                case 0: flagBranch = allBranch.answerA; break;
+                case 1: flagBranch = allBranch.answerB; break;
+                case 2: flagBranch = allBranch.answerC; break;
+                case 3: flagBranch = allBranch.answerD; break;
+              }
+              oVideo.src = flagBranch.next_video.src;
+              allBranch = flagBranch.next_video;
+              let dataAllBranch = JSON.stringify(allBranch);
+
+              oOption.style.display = 'none';
+              oSelectWrapper.style.display = 'block';
+              let oUl = oSelectWrapper.getElementsByTagName('ul')[0];
+              let oImg = aSelectIcon[0].getElementsByTagName('img')[0];
+              $('.video-wrapper .select-wrapper li img').attr('src', "./images/tick.png");
+              if ($('.select-wrapper li').eq(currImg + 1).length) {
+                console.log(currImg + 1,$('.select-wrapper li').eq(currImg + 1).parent());
+                $('.select-wrapper li').eq(currImg + 1).remove();
+                $('.select-wrapper li').eq(currImg).after(`<li><div class="text">${this.innerHTML}</div><img src="./images/position.png" class="icon" data-src="${flagBranch.next_video.src}" data-allBranch=${JSON.stringify(allBranch)}>
+        </li>`);
+              } else {
+                oUl.innerHTML += `<li><div class="text">${this.innerHTML}</div><img src="./images/position.png" class="icon" data-src="${flagBranch.next_video.src}" data-allBranch=${JSON.stringify(allBranch)}>
+        </li>`;
+              }
+              currImg += 1;
+              oVideo.controls = true;
+              oVideo.currentTime = 0;
+              caluSelectPosition();
+              refreshSelect();
+            })
+          });
+        }
+      };
+
+      // -------------------------------------------------------------------------------------
+      // 获取元素样式值
+      function getStyle(obj, attr) {
+        if (obj.currentStyle) {
+          return obj.currentStyle[attr];
+        } else {
+          return getComputedStyle(obj, null)[attr];
+        }
+      }
+
+      initialize();
+
+      //  获取答案
+      function getAnwser(obj, jsonData) {
+        obj.html('');
+        if (jsonData.answerA) {
+          obj.html(obj.html() + `<li>${jsonData.answerA.text}</li>`);
+        }
+        if (jsonData.answerB) {
+          obj.html(obj.html() + `<li>${jsonData.answerB.text}</li>`);
+        }
+        if (jsonData.answerC) {
+          obj.html(obj.html() + `<li>${jsonData.answerC.text}</li>`);
+        }
+        if (jsonData.answerD) {
+          obj.html(obj.html() + `<li>${jsonData.answerD.text}</li>`);
+        }
+      }
+
+    })();
+</script>
+
+</html>

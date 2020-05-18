@@ -33,6 +33,18 @@
       text-indent: 20px;
     }
 
+    .header button {
+      width: 70px;
+      height: 30px;
+      line-height: 30px;
+      border: none;
+      border-radius: 15px;
+      color: #fff;
+      cursor: pointer;
+      outline: none;
+      margin: 10px 8px;
+    }
+
     .main-wrapper {
       width: 100%;
 
@@ -94,9 +106,9 @@
     }
 
     .main-wrapper .right .title {
-      height: 100px;
+      height: 80px;
       padding-right: 20px;
-      line-height: 100px;
+      line-height: 80px;
       font-size: 20px;
       text-align: center;
       letter-spacing: 20px;
@@ -167,6 +179,12 @@
       outline: none;
     }
 
+    .main-wrapper .right #content-wrapper .img-wrapper video {
+      width: 100%;
+      height: 90px;
+      /* border-radius: 5px; */
+    }
+
     .main-wrapper .right #content-wrapper p {
       height: 30px;
       line-height: 30px;
@@ -208,6 +226,8 @@
     }
 
     .but {
+      width: 54px;
+      height: 35px;
       border: 1px solid transparent;
       padding: .375rem .75rem;
       border-radius: .25rem;
@@ -237,11 +257,23 @@
       background-color: rgb(247, 110, 30);
       border-color: rgba(250, 119, 44, 0.925);
     }
+
+    .bgcolor {
+      background-color: rgb(238, 122, 55);
+    }
   </style>
 </head>
 
 <body>
-  <div class="header">互动视频上传</div>
+  <div class="header">
+    <div class="row">
+      <div class="col-10">互动视频上传</div>
+      <div class="col-2 font-size-small">
+        <button style="background-color: #fff;border:1px solid #000;color: #000;" id="publish">发布</button>
+        <button style="background-color: rgb(238, 122, 55);" id="preShow">预览</button>
+      </div>
+    </div>
+  </div>
   <div class="main-wrapper">
     <div class="left">
       <div class="top">
@@ -258,11 +290,11 @@
       <div class="title">时间轴</div>
       <div class="content p-5">
         <div id="content-wrapper">
-          <div class="branch position-relative" id="head-branch" data-question="是否继续学习"
-            data-answer='{"answerA":"是","answerB":"否"}'>
+          <div class="branch position-relative" id="head-branch" data-question=""
+            data-answer=''>
             <div class="branch-content">
               <div class="img-wrapper">
-                <img src="" alt="">
+                <video src="" alt=""></video>
                 <span class="head-text">片头</span>
                 <span class="icon icon-jia"><i class="iconfont icon-jia1"></i></span>
                 <img src="images/editor.svg" alt="" class="img-fliud icon-edit d-none" data-toggle="modal"
@@ -374,30 +406,11 @@
       });
     };
 
-    //  截取视频的第一帧
-    let captureImage = function (video) {
-      let scale = 0.8;
-      let canvas = document.createElement("canvas");
-      canvas.width = 400;
-      canvas.height = 200;
-      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-      $('#videoFile').html(`<img src="${canvas.toDataURL("image/png")}" alt="">
-                    <span>${video.name}</span>`);
-    };
-
     //  上传视频成功后加入素材库
     let addvideoList = function (video) {
       $('#videoFile').append(`<li><video src="./upload/${video.src}" draggable="true"></video>
                     <p>${video.name.split('.')[0]}</p></li>`);
     }
-
-    // document.ondragenter = function (e) {
-    //     e.preventDefault(); //使得ondrop可能触发
-    // }
-
-    // document.ondragover = function (e) {
-    //     e.preventDefault();//阻止浏览器在新窗口中打开本地图片
-    // }
 
     // 视频拖入画布功能
     let dragVideo = function () {
@@ -424,8 +437,11 @@
       parentBranch.find('.icon-fold').eq(0).removeClass('d-none');
       parentBranch.find('.icon-open').eq(0).addClass('d-none');
 
-      branchLocation(parentBranch);
-      exchangeBranch(parentBranch);
+      //  限定最多4条分支
+      if (parentBranch.children('.branch').length < 4) {
+        branchLocation(parentBranch);
+        exchangeBranch(parentBranch);
+      }
 
       event.stopPropagation();
     });
@@ -446,6 +462,7 @@
           changeLocation(parentBranch.children('.branch').eq(3), "-220px", '50', '-13%');
       }
     }
+    
     //  给分支收缩绑定点击事件
     $('#content-wrapper ').on('click', '.icon-fold', function (event) {
       let _this = $(this);
@@ -493,7 +510,7 @@
             data-answer=''>
                             <div class="branch-content">
                                 <div class="img-wrapper">
-                                    <img src="" alt="">
+                                  <video src="" alt=""></video>
                                     <span class="icon icon-jia"><i class="iconfont icon-jia1"></i></span>
                                     <img src="images/del.svg" alt="" class="img-fluid position-absolute icon-del"
                   style="top: 5%;right: 5%;">
@@ -570,16 +587,19 @@
     $('#content-wrapper').on('click', '.icon-edit', function (event) {
       let _this = $(this);
       let parentBranch = _this.parent().parent().parent();
-      $('#question').val(parentBranch.data('question') ? parentBranch.data('question') : '');
-      $('#answerA').val(parentBranch.data('answer').answerA ? parentBranch.data('answer').answerA : '');
-      $('#answerB').val(parentBranch.data('answer').answerB ? parentBranch.data('answer').answerB : '');
-      $('#answerC').val(parentBranch.data('answer').answerC ? parentBranch.data('answer').answerC : '');
-      $('#answerD').val(parentBranch.data('answer').answerD ? parentBranch.data('answer').answerD : '');
+      let answer = parentBranch.attr('data-answer');
+      answer = answer?JSON.parse(answer):'';
+
+      $('#question').val(parentBranch.attr("data-question"));
+      $('#answerA').val(answer.answerA);
+      $('#answerB').val(answer.answerB);
+      $('#answerC').val(answer.answerC);
+      $('#answerD').val(answer.answerD);
 
       $('#question-save').unbind('click').on('click', function () {
         $('#modal-edit').modal('hide');
         parentBranch.attr("data-question", $('#question').val());
-        parentBranch.attr("data-answer", `{"answerA":${$('#answerA').val()},"answerB":${$('#answerB').val()},"answerC":${$('#answerC').val()},"answerD":${$('#answerD').val()}}`);
+        parentBranch.attr("data-answer", `{"answerA":"${$('#answerA').val()}","answerB":"${$('#answerB').val()}","answerC":"${$('#answerC').val()}","answerD":"${$('#answerD').val()}"}`);
 
         // console.log(`{"answerA":${$('#answerA').val()},"answerB":${$('#answerB').val()},"answerC":${$('#answerC').val()},"answerD":${$('#answerD').val()}}`,parentBranch)
       })
@@ -602,37 +622,84 @@
 
 
     // -----------------------------------------视频逻辑开始--------------------------------------------------------
-    /* 拖动时触发*/
+    // 拖动时触发
     document.addEventListener("dragstart", function (event) {
-      console.log(event);
-      //dataTransfer.setData()方法设置数据类型和拖动的数据
-      event.dataTransfer.setData("video", event.target.id);
+      let $li = $(event.path[1])
+      let videoSrc = $li.children().eq(0).attr('src');
+      let text = $li.children().eq(1).html();
+
+      event.dataTransfer.setData("Text", `{"videoSrc":"${videoSrc}","title":"${text}"}`);
     });
-    /* 拖动完成后触发 */
-    document.addEventListener("dragenter", function (event) {
-      // console.log(event)
-      // if (event.target.className == "droptarget") {
-      //   event.target.style.border = "3px dotted red";
-      // }
-    });
+
     // 默认情况下,数据/元素不能在其他元素中被拖放。对于drop我们必须防止元素的默认处理
     document.addEventListener("dragover", function (event) {
       event.preventDefault();
     });
-    // 当可拖放的p元素离开droptarget，重置div的边框样式
-    document.addEventListener("dragleave", function (event) {
-      // console.log(event);
-    });
-    /*对于drop,防止浏览器的默认处理数据(在drop中链接是默认打开)
-    复位输出文本的颜色和DIV的边框颜色
-    利用dataTransfer.getData()方法获得拖放数据
-    拖拖的数据元素id(“drag1”)
-    拖拽元素附加到drop元素*/
+
     document.addEventListener("drop", function (event) {
-      console.log(event);
+      let data = event.dataTransfer.getData("Text");
+      let jsonDate = JSON.parse(data);
+      let $branch = $(event.path[2]);
+      $branch.find('video').eq(0).attr("src", jsonDate.videoSrc)
+      $branch.find('p').eq(0).html(jsonDate.title);
+      // console.log($branch);
       event.preventDefault();
     });
 
+
+    //  发布功能
+    $("#publish").on('click', function () {
+      // 保存交互视频数据
+      var interaction_video_data = {};
+      var head_branch = $("#head-branch");
+
+      var all_branch_data = get_video_tree(head_branch);
+
+      window.localStorage.setItem('video',JSON.stringify(all_branch_data));
+      window.open("play.html");
+    });
+
+    function get_video_tree(parentBranch) {
+      // body...
+      var data = {};
+
+      // 获取当前分支下的所有子分支
+      // console.log(parentBranch);
+
+      var branchs = parentBranch.children(".branch");
+
+
+      var src = parentBranch.find(".img-wrapper video:first").attr("src");
+      var question = parentBranch.attr("data-question");
+      let answer = parentBranch.attr('data-answer');
+      answer = answer?JSON.parse(answer):'';
+
+      // 递归终止条件
+      if (src === "" && branchs.length < 1) {
+        return null;
+      }
+
+      // 组装数据
+      data['src'] = src;
+      data['question'] = question;
+
+      // 遍历分支
+      var len = branchs.length;
+      var i = 0;
+      for (var index in answer) {
+        if (answer[index] !== "") {
+          var sub_data = {
+            text: answer[index],
+            next_video: get_video_tree(branchs.eq(i++)),
+          }
+          data[index] = sub_data;
+        }
+      }
+
+      return data;
+    }
+    console.log(window.localStorage.getItem('video'));
+    
   };
 </script>
 
