@@ -2,13 +2,10 @@ li {
   list-style: none;
   float: left;
 }
-#title {
-  text-align: center;
-}
 .video-wrapper {
   position: relative;
   height: 450px;
-  width: 640px;
+  /* width: 640px; */
   margin: 20px auto;
 }
 #video {
@@ -110,4 +107,7 @@ li {
 }
 .clearfix{
   *zoom:1;
+}
+.select-wrapper *, .select-wrapper *::before, .select-wrapper *::after{
+  box-sizing:content-box;
 }

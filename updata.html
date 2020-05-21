@@ -47,12 +47,12 @@
 
     .main-wrapper {
       width: 100%;
-
+      height: calc(100vh - 50px);
     }
 
     .main-wrapper .left {
       width: 15%;
-      height: 646px;
+      height: 100%;
       padding: 15px;
       box-sizing: border-box;
       float: left;
@@ -76,7 +76,7 @@
       height: 30px;
       border: none;
       border-radius: 20px;
-      background-color: rgb(238, 122, 55);
+      background-color: rgb(67, 172, 203);
       color: #fff;
       cursor: pointer;
       outline: none;
@@ -100,7 +100,7 @@
 
     .main-wrapper .right {
       width: 85%;
-      height: 646px;
+      height: 100%;
       float: left;
       overflow: hidden;
     }
@@ -156,7 +156,7 @@
       width: 65px;
       height: 25px;
       line-height: 25px;
-      background-color: rgb(240, 122, 68);
+      background-color: rgb(67, 172, 203);
       position: absolute;
       top: 0;
       left: 0;
@@ -171,7 +171,7 @@
       display: inline-block;
       width: 20px;
       height: 20px;
-      background-color: rgb(240, 122, 68);
+      background-color: rgb(67, 172, 203);
       border-radius: 50%;
       text-align: center;
       line-height: 20px;
@@ -248,29 +248,33 @@
 
     .btn-save {
       color: #fff;
-      background-color: rgb(238, 122, 55);
-      border-color: rgb(238, 122, 55);
+      background-color: rgb(67, 172, 203);
+      border-color: rgb(67, 172, 203);
     }
 
     .btn-save:hover {
       color: #fff;
-      background-color: rgb(247, 110, 30);
-      border-color: rgba(250, 119, 44, 0.925);
+      background-color: rgb(50, 146, 190);
+      border-color: rgba(67, 172, 203,0.925);
     }
 
     .bgcolor {
-      background-color: rgb(238, 122, 55);
+      background-color: rgb(67, 172, 203);
+    }
+    @media (max-width: 1280px) {
+      .main-wrapper .left{width: 20%;}
+      .main-wrapper .right{width: 80%;}
     }
   </style>
 </head>
 
 <body>
-  <div class="header">
+  <div class="header with-box-shadow">
     <div class="row">
-      <div class="col-10">互动视频上传</div>
-      <div class="col-2 font-size-small">
+      <div class="col-lg-9 col-md-8">互动视频上传</div>
+      <div class="col-lg-3 col-md-4 font-size-small">
         <button style="background-color: #fff;border:1px solid #000;color: #000;" id="publish">发布</button>
-        <button style="background-color: rgb(238, 122, 55);" id="preShow">预览</button>
+        <button style="background-color: rgb(67, 172, 203);" id="preShow">预览</button>
       </div>
     </div>
   </div>
@@ -366,16 +370,10 @@
     let oFile = document.getElementById('upfile');
     let oContentWrapper = document.getElementById('content-wrapper');
 
-    //  监听当前点击的是哪个元素
-    // $(document).mousedown(function (e) {
-    //     console.log($(e.target));  //当前点击的元素
-    // })
-
     $upFile = $("#upfile");
     $("#imgData").click(function () {
       $upFile.click();
       $upFile.off("change").on('change', (function () {
-        // console.log(oFile.files.length);
         for (let i = 0; i < oFile.files.length; i++) {
           upFile(oFile.files[i]);
         }
@@ -387,7 +385,7 @@
       let formData = new FormData();
       formData.append("upfile", file);
       $.ajax({
-        url: './updata.php',
+        url: 'php/updata.php',
         type: 'post',
         data: formData,
         dataType: "json",
@@ -600,11 +598,8 @@
         $('#modal-edit').modal('hide');
         parentBranch.attr("data-question", $('#question').val());
         parentBranch.attr("data-answer", `{"answerA":"${$('#answerA').val()}","answerB":"${$('#answerB').val()}","answerC":"${$('#answerC').val()}","answerD":"${$('#answerD').val()}"}`);
-
-        // console.log(`{"answerA":${$('#answerA').val()},"answerB":${$('#answerB').val()},"answerC":${$('#answerC').val()},"answerD":${$('#answerD').val()}}`,parentBranch)
       })
 
-      // event.stopPropagation();
     });
 
     //  删除分支
@@ -642,7 +637,6 @@
       let $branch = $(event.path[2]);
       $branch.find('video').eq(0).attr("src", jsonDate.videoSrc)
       $branch.find('p').eq(0).html(jsonDate.title);
-      // console.log($branch);
       event.preventDefault();
     });
 
@@ -664,7 +658,6 @@
       var data = {};
 
       // 获取当前分支下的所有子分支
-      // console.log(parentBranch);
 
       var branchs = parentBranch.children(".branch");
 
