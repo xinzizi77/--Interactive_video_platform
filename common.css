@@ -74,14 +74,13 @@ li {
 }
 .video-wrapper .option-wrapper {
   position: absolute;
-  bottom: 20px;
+  bottom: 0;
   left: 0;
   display: none;
 }
-.video-wrapper .option-wrapper .question {
-  height: 10px;
+/* .video-wrapper .option-wrapper .question {
   padding-left: 40px;
-}
+} */
 .video-wrapper .option-wrapper li{
   width: 260px;
   height: 40px;
@@ -100,12 +99,12 @@ li {
 .video-wrapper .option-wrapper li:nth-child(odd){
   margin-right: 30px;
 }
-.clearfix:after{
+.clearfix1:after{
   display:block;
   content:' ';
   clear:both;
 }
-.clearfix{
+.clearfix1{
   *zoom:1;
 }
 .select-wrapper *, .select-wrapper *::before, .select-wrapper *::after{

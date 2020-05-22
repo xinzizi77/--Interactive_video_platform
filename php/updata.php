@@ -10,7 +10,7 @@ header("Content-type:text/html;charset=UTF-8");
 $upfile = $_FILES['upfile'];
 // var_dump($upfile);
 
-function upload_file($files, $path = "./upload",$imagesExt=['jpg','png','jpeg','gif','mp4'])
+function upload_file($files, $path = "../upload",$imagesExt=['jpg','png','jpeg','gif','mp4'])
 {
     // 判断错误号
     if ($files['error'] == 00) {

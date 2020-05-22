@@ -121,31 +121,14 @@
         </ul>
         <div class="py-3">
           <div class="row videoList">
-            <div class="col-3 with-hand">
+            <!-- <div class="col-3 with-hand">
               <video src="D:\greenDownload\wamp64\www\demo\upload\5b02ac134b42852dca97aeb316abbab6.mp4"
                 class="w-100"></video>
               <p class="py-3">三角形构图法则</p>
-            </div>
-            <div class="col-3">
-              <video src="D:\greenDownload\wamp64\www\demo\upload\5b02ac134b42852dca97aeb316abbab6.mp4"
-                class="w-100"></video>
-              <p class="py-3">三角形构图法则</p>
-            </div>
-            <div class="col-3">
-              <video src="D:\greenDownload\wamp64\www\demo\upload\5b02ac134b42852dca97aeb316abbab6.mp4"
-                class="w-100"></video>
-              <p class="py-3">三角形构图法则</p>
-            </div>
-            <div class="col-3">
-              <video src="D:\greenDownload\wamp64\www\demo\upload\5b02ac134b42852dca97aeb316abbab6.mp4"
-                class="w-100"></video>
-              <p class="py-3">三角形构图法则</p>
-            </div>
-            <div class="col-3">
-              <video src="D:\greenDownload\wamp64\www\demo\upload\5b02ac134b42852dca97aeb316abbab6.mp4"
-                class="w-100"></video>
-              <p class="py-3">三角形构图法则</p>
-            </div>
+            </div> -->
+          </div>
+          <div class="row justify-content-center d-none" id="noVideo">
+            <div class="col font-size-lager py-5">暂无视频</div>
           </div>
         </div>
       </div>
@@ -182,7 +165,47 @@
       let _this = $(this);
       $(".videType li").removeClass('active');
       _this.addClass('active');
+      videoType(_this.html())
+      console.log(_this.html());
     })
+
+    videoType('全部');
+    // 获取视频数据
+    function videoType(type) {
+      $.ajax({
+        url: 'php/videoType.php',
+        type: 'get',
+        dataType: 'json',
+        data: {
+          "video_type": type
+        },
+        success: function (data) {
+          $(".videoList").html('');
+          if (data != 0) {
+            $("#noVideo").addClass('d-none');
+            for (let i = 0; i < data.length; i++) {
+              let oHtml = `<div class="col-3 with-hand" data-id="${data[i].video_id}">
+              <video src="${data[i].video_head}"
+                class="w-100"></video>
+              <p class="py-3">${data[i].video_name}</p>
+            </div>`;
+              $(".videoList").html($(".videoList").html() + oHtml);
+            }
+            // 点击视频跳转
+            $(".col-3").click(function () {
+                let _this = $(this);
+                let video_id = _this.attr('data-id');
+                window.open("play.html" + '?id=' + video_id);
+              })
+          } else {
+            $("#noVideo").removeClass('d-none');
+          }
+        },
+        error: function (err) {
+          console.log(err);
+        }
+      })
+    }
 
     // 登录请求
     $('#logIn').click(function () {
@@ -341,7 +364,7 @@
               $('#logicon').removeClass('d-none')
               $('#usericon').addClass('d-none')
               $('#logout').addClass('d-none')
-              // location.href('index.html')
+              window.localStorage.clear()
             })
           }
 
@@ -353,22 +376,23 @@
     })
 
     //  跳转到创作中心
-    $('#updata').click(function(){
+    $('#updata').click(function () {
       $.ajax({
-      url: 'php/session.php',
-      type: "get",
-      dataType: "json",
-      success: function (data) {
-        if (data.code) {
-          window.location.href = "videoInfo.html";
-        } else {
-          $('#modal-popup').modal('show');
+        url: 'php/session.php',
+        type: "get",
+        dataType: "json",
+        success: function (data) {
+          if (data.code) {
+            window.localStorage.setItem('user_id', data.user_id);
+            window.location.href = "videoInfo.html";
+          } else {
+            $('#modal-popup').modal('show');
+          }
+        },
+        error: function (error) {
+          console.log(error)
         }
-      },
-      error: function (error) {
-        console.log(error)
-      }
-    })
+      })
 
     })
   </script>

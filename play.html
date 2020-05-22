@@ -8,18 +8,25 @@
   <link rel="stylesheet" href="https://neveragain.allstatics.com/2019/assets/style/bootstrap-wondershare.min.css">
   <link rel="stylesheet" type="text/css" href="./common.css">
   <title>video demo</title>
-  
+  <style>
+    .bgcolor {
+      background-color: rgb(67, 172, 203);
+    }
+  </style>
 </head>
 
 <body>
   <header id="header" class="with-box-shadow">
     <div class="container">
       <div class="row align-items-center">
-        <div class="col-8 font-weight-bolder">互动视频平台</div>
-        <div class="col-4 text-center">
+        <div class="col-7 font-weight-bolder">互动视频平台</div>
+        <div class="col-5 text-right">
           <a href="index.html" target="_block" class="btn border-0">首页</a>
           <a href="updata.html" target="_block" class="btn border-0">创作中心</a>
-          <a href="updata.html" target="_block" class="btn border-0">个人中心</a>
+          <a href="userInfor.html" target="_block" class="btn border-0 d-none" id="usericon"></a>
+          <a href="#" target="_block" class="btn border-0 d-none" id="logout">退出</a>
+          <a href="#" target="_block" class="btn border-0" data-toggle="modal" data-target="#modal-popup"
+            id="logicon">登录</a>
         </div>
       </div>
     </div>
@@ -28,10 +35,10 @@
     <div class="container pt-4">
       <div class="row justify-content-center">
         <div class="col-8">
-          <p class="font-weight-bolder font-size-large">交互式视频平台demo</p>
-          <p class="text-gray-7">类型:大学 作者：油菜花</p>
+          <p class="font-weight-bolder font-size-large" id="title"></p>
+          <p class="text-gray-7" id="context"></p>
           <div class="video-wrapper">
-            <video src="D:\greenDownload\wamp64\www\demo\upload\5b02ac134b42852dca97aeb316abbab6.mp4" poster="" controls id="video" autoplay></video>
+            <video src="" poster="" controls id="video" autoplay></video>
             <div class="select-wrapper">
               <ul>
                 <li>
@@ -40,12 +47,19 @@
                 </li>
               </ul>
             </div>
-            <div class="option-wrapper">
-              <div class="question" id="question"></div>
-              <ul class="clearfix" id="answer">
-              </ul>
+            <div class="option-wrapper w-100">
+              <div class="row m-0  justify-content-center">
+                <div class="col-10">
+                  <div class="question" id="question"></div>
+                  <ul class="clearfix1" id="answer">
+                  </ul>
+                </div>
+
+              </div>
+
             </div>
           </div>
+          <div class="text-right mb-5"><a class="publish btn bgcolor text-white d-none" id="pulish">发布视频</a></div>
         </div>
       </div>
 
@@ -56,21 +70,67 @@
 <script src="https://neveragain.allstatics.com/2019/assets/script/wsc-override-ws.js"></script>
 <script src="https://neveragain.allstatics.com/2019/assets/script/wsc-common.js"></script>
 <script>$(function () { wsc.common.init() })</script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 <script>
     (function () {
       let oVideo, oVideoWrapper, oSelectBtn, oText;
       let scale = 0.8;
       let flag = true;
       let currImg = 0;
+      let video_id = GetRequest().id;
+      let allBranch;
 
-      //  读取互动视频数据
-      let allBranch = window.localStorage.getItem('video');
-      allBranch = $.parseJSON(allBranch);
-
-      //  设置片头视频
-      // $('#video').attr('src', allBranch.src);
-      // $('.select-wrapper img').attr('data-allBranch', JSON.stringify(allBranch));
-      // $('.select-wrapper img').attr('data-src', allBranch.src);
+      $.ajax({
+        url: 'php/getVideo.php',
+        type: "get",
+        dataType: "json",
+        data: {
+          "video_id": video_id
+        },
+        success: function (data) {
+          if (data.code) {
+            if (data.video_status == 0) {
+              $('#pulish').removeClass('d-none');
+              $('#pulish').click(function(){
+                        $.ajax({
+                            url:"php/modifyStatus.php",
+                            type:"GET",
+                            dataType:"json",
+                            data: {
+                                "video_id": video_id,
+                                "video_status": 1
+                            },
+                            success: function(data){
+                                if (data.code) {
+                                    swal("视频发布成功", {
+                                        icon: "success",
+                                        buttons: false,
+                                        timer: 2000
+                                    }).then((value) => {
+                                        window.open('index.html')
+                                    })
+                                }
+                            },
+                            error: function(err){
+                                console.log(err)
+                            }
+                        })
+                    })
+            }
+            //  读取互动视频数据
+            allBranch = data.video_answer_json;
+            allBranch = $.parseJSON(allBranch);
+            $('#video').attr('src', allBranch.src);
+            $('.select-wrapper img').attr('data-allBranch', JSON.stringify(allBranch));
+            $('.select-wrapper img').attr('data-src', allBranch.src);
+            $('#title').html(data.video_name);
+            $('#context').html(`类型:${data.video_type} 作者：${data.user_name}`)
+          }
+        },
+        error: function (error) {
+          console.log(error)
+        }
+      })
 
       let initialize = function () {
         oVideo = document.getElementById('video');
@@ -198,6 +258,69 @@
         }
       }
 
+      //  获取url?后的参数
+      function GetRequest() {
+        var url = location.search; //获取url中"?"符后的字串  
+        var theRequest = new Object();
+        if (url.indexOf("?") != -1) {
+          var str = url.substr(1);
+          strs = str.split("&");
+          for (var i = 0; i < strs.length; i++) {
+            theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+          }
+        }
+        return theRequest;
+      }
+
+      //  判断是否登陆
+      $.ajax({
+        url: 'php/session.php',
+        type: "get",
+        dataType: "json",
+        success: function (data) {
+          console.log(data);
+          if (data.code) {
+            $('#logicon').addClass('d-none')
+            $('#usericon').removeClass('d-none')
+            $('#logout').removeClass('d-none')
+            $('#usericon').html(`你好，${data.user_name}`)
+          }
+        },
+        error: function (error) {
+          console.log(error)
+        }
+      })
+
+      //  登出请求
+      $('#logout').click(function () {
+        $.ajax({
+          url: `php/login.php`,
+          dataType: 'json',
+          data: { 'act': 'logout' },
+          type: 'post',
+          success: function (data) {
+            if (data.msg) {
+              swal("成功退出", {
+                icon: "success",
+                buttons: false,
+                timer: 2000
+              }).then((value) => {
+                window.location.href = "index.html";
+                window.localStorage.clear()
+              })
+            }
+
+          },
+          error: function (err) {
+            window.console.log(err)
+          }
+        })
+      })
+
+      //  登陆跳转
+      $('#logicon').click(function(){
+        window.location.href = "index.html";
+      })
     })();
 </script>
 

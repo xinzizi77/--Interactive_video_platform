@@ -50,25 +50,20 @@
                     <div class="row justify-content-center">
                         <div class="col-10">
                             <h4>待审核视频</h4>
-                            <div class="row border py-2 mt-4  with-box-shadow align-items-center">
+                            <div class="videoList">
+                                <!-- <div class="row border py-2 mt-4  with-box-shadow align-items-center">
                                 <div class="col-6">
                                     <p class="py-2 m-0"><a href="#">视频名称：拍摄技巧互动视频</a></p>
                                     <p class="py-2 m-0 font-size-small">视频类型：大学 | 作者：油菜花</p>
                                 </div>
                                 <div class="col-6">
-                                    <a href="#" class="btn bgcolor  py-2 ">发布视频</a><br>
+                                    <a href="#" class="btn bgcolor  py-2 publish">发布视频</a><br>
                                     <a href="#" class="btn bgcolor py-2">删除视频</a>
                                 </div>
+                            </div> -->
                             </div>
-                            <div class="row border py-2 mt-4  with-box-shadow align-items-center">
-                                <div class="col-6">
-                                    <p class="py-2 m-0"><a href="#">视频名称：拍摄技巧互动视频</a></p>
-                                    <p class="py-2 m-0 font-size-small">视频类型：大学 | 作者：油菜花</p>
-                                </div>
-                                <div class="col-6">
-                                    <a href="#" class="btn bgcolor  py-2 ">发布视频</a><br>
-                                    <a href="#" class="btn bgcolor py-2">删除视频</a>
-                                </div>
+                            <div class="row justify-content-center d-none" id="noVideo">
+                                <div class="col font-size-lager py-5">暂无待审核视频</div>
                             </div>
                         </div>
                     </div>
@@ -83,6 +78,105 @@
     <script>$(function () { wsc.common.init() })</script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="js/admin.js"></script>
+    <script>
+        $.ajax({
+        url: 'php/videoStatus.php',
+        type: 'get',
+        dataType: 'json',
+        data: {
+          "video_status": 1
+        },
+        success: function (data) {
+            $(".videoList").html('');
+                if (data != 0) {
+                    $("#noVideo").addClass('d-none');
+                    for (let i = 0; i < data.length; i++) {
+                        let oHtml = `<div class="row border py-2 mt-4  with-box-shadow align-items-center" data-id="${data[i].video_id}">
+                                <div class="col-6">
+                                    <p class="py-2 m-0"><a href="#" class="with-hand" data-id="${data[i].video_id}">视频名称：${data[i].video_name}</a></p>
+                                    <p class="py-2 m-0 font-size-small">视频类型：${data[i].video_type}</p>
+                                </div>
+                                <div class="col-6">
+                                    <a href="#" class="btn bgcolor  py-2 publishVideo">发布视频</a><br>
+                                    <a href="#" class="btn bgcolor py-2 delVideo">删除视频</a>
+                                </div>
+                            </div>`
+                        $(".videoList").html($(".videoList").html() + oHtml);
+                    }
+                    // 点击视频跳转
+                    $(".with-hand").click(function () {
+                        let _this = $(this);
+                        let video_id = _this.attr('data-id');
+                        window.open("play.html" + '?id=' + video_id);
+                        event.stopPropagation();
+                    })
+
+                    // 删除视频
+                    $(".delVideo").click(function(){
+                        let _this = $(this);
+                        let parent = _this.parent().parent();
+                        $.ajax({
+                            url:"php/delVideo.php",
+                            type:"GET",
+                            dataType:"json",
+                            data: {
+                                "video_id": parent.attr("data-id")
+                            },
+                            success: function(data){
+                                if (data.code) {
+                                    swal("删除视频成功", {
+                                        icon: "success",
+                                        buttons: false,
+                                        timer: 2000
+                                    }).then((value) => {
+                                        parent.remove();
+                                    })
+                                }
+                            },
+                            error: function(err){
+                                console.log(err)
+                            }
+                        })
+                        event.stopPropagation();
+                    })
+
+                    $(".publishVideo").click(function(){
+                        let _this = $(this);
+                        let parent = _this.parent().parent();
+                        $.ajax({
+                            url:"php/modifyStatus.php",
+                            type:"GET",
+                            dataType:"json",
+                            data: {
+                                "video_id": parent.attr("data-id"),
+                                "video_status": 2
+                            },
+                            success: function(data){
+                                if (data.code) {
+                                    swal("视频发布成功", {
+                                        icon: "success",
+                                        buttons: false,
+                                        timer: 2000
+                                    }).then((value) => {
+                                        parent.remove();
+                                    })
+                                }
+                            },
+                            error: function(err){
+                                console.log(err)
+                            }
+                        })
+                        event.stopPropagation();
+                    })
+                } else {
+                    $("#noVideo").removeClass('d-none');
+                }
+        },
+        error: function (err) {
+          console.log(err);
+        }
+      })
+    </script>
 </body>
 
 </html>

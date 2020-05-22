@@ -255,15 +255,21 @@
     .btn-save:hover {
       color: #fff;
       background-color: rgb(50, 146, 190);
-      border-color: rgba(67, 172, 203,0.925);
+      border-color: rgba(67, 172, 203, 0.925);
     }
 
     .bgcolor {
       background-color: rgb(67, 172, 203);
     }
+
     @media (max-width: 1280px) {
-      .main-wrapper .left{width: 20%;}
-      .main-wrapper .right{width: 80%;}
+      .main-wrapper .left {
+        width: 20%;
+      }
+
+      .main-wrapper .right {
+        width: 80%;
+      }
     }
   </style>
 </head>
@@ -294,8 +300,7 @@
       <div class="title">时间轴</div>
       <div class="content p-5">
         <div id="content-wrapper">
-          <div class="branch position-relative" id="head-branch" data-question=""
-            data-answer=''>
+          <div class="branch position-relative" id="head-branch" data-question="" data-answer=''>
             <div class="branch-content">
               <div class="img-wrapper">
                 <video src="" alt=""></video>
@@ -410,12 +415,6 @@
                     <p>${video.name.split('.')[0]}</p></li>`);
     }
 
-    // 视频拖入画布功能
-    let dragVideo = function () {
-      $('#videoFile').find('video').forEach(video => {
-      });
-    }
-
 
     // -----------------------------------------分支逻辑开始--------------------------------------------------------
     //  添加分支
@@ -460,7 +459,7 @@
           changeLocation(parentBranch.children('.branch').eq(3), "-220px", '50', '-13%');
       }
     }
-    
+
     //  给分支收缩绑定点击事件
     $('#content-wrapper ').on('click', '.icon-fold', function (event) {
       let _this = $(this);
@@ -586,7 +585,7 @@
       let _this = $(this);
       let parentBranch = _this.parent().parent().parent();
       let answer = parentBranch.attr('data-answer');
-      answer = answer?JSON.parse(answer):'';
+      answer = answer ? JSON.parse(answer) : '';
 
       $('#question').val(parentBranch.attr("data-question"));
       $('#answerA').val(answer.answerA);
@@ -631,7 +630,7 @@
       event.preventDefault();
     });
 
-    document.addEventListener("drop", function (event) {
+    $(".right")[0].addEventListener("drop", function (event) {
       let data = event.dataTransfer.getData("Text");
       let jsonDate = JSON.parse(data);
       let $branch = $(event.path[2]);
@@ -643,15 +642,45 @@
 
     //  发布功能
     $("#publish").on('click', function () {
+      saveVideo(1);
+    });
+
+    //  预览功能
+    $("#preShow").on('click', function () {
+      saveVideo(0);
+    });
+
+    //  存储互动视频到数据库
+    function saveVideo(status) {
       // 保存交互视频数据
       var interaction_video_data = {};
       var head_branch = $("#head-branch");
 
       var all_branch_data = get_video_tree(head_branch);
-
-      window.localStorage.setItem('video',JSON.stringify(all_branch_data));
-      window.open("play.html");
-    });
+      if (all_branch_data.src) {
+        $.ajax({
+          url: 'php/saveVideo.php',
+          type: "POST",
+          dataType: "json",
+          data: {
+            "user_id": window.localStorage.getItem('user_id'),
+            "video_name": window.localStorage.getItem('video_name'),
+            "video_head": all_branch_data.src,
+            "video_type": window.localStorage.getItem('video_type'),
+            'video_answer_json': JSON.stringify(all_branch_data),
+            'video_status': status
+          },
+          success: function (data) {
+            if (data.code) {
+              window.open("play.html" + '?id=' + data.video_id);
+            }
+          },
+          error: function (error) {
+            console.log(error)
+          }
+        })
+      }
+    }
 
     function get_video_tree(parentBranch) {
       // body...
@@ -660,12 +689,10 @@
       // 获取当前分支下的所有子分支
 
       var branchs = parentBranch.children(".branch");
-
-
       var src = parentBranch.find(".img-wrapper video:first").attr("src");
       var question = parentBranch.attr("data-question");
       let answer = parentBranch.attr('data-answer');
-      answer = answer?JSON.parse(answer):'';
+      answer = answer ? JSON.parse(answer) : '';
 
       // 递归终止条件
       if (src === "" && branchs.length < 1) {
@@ -692,7 +719,6 @@
       return data;
     }
     console.log(window.localStorage.getItem('video'));
-    
   };
 </script>
 

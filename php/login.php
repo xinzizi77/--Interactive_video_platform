@@ -19,8 +19,9 @@ if($act=='logout'){
                 if(mysqli_num_rows($result)==1){
                     $row=mysqli_fetch_assoc($result);
                     $_SESSION['user_name']=$row["user_name"];
+                    $_SESSION['user_id']=$row["user_id"];
                     $_SESSION['isLogin']=1;
-                    $ret = ["code" => 1,"user_name" =>$row["user_name"],"user_type"=>$row["user_type"]];
+                    $ret = ["code" => 1,"user_name" =>$row["user_name"],"user_type"=>$row["user_type"],"user_id"=>$row["user_id"]];
                     echo json_encode($ret,JSON_UNESCAPED_UNICODE);
                 }else{
                     $ret = ["code" => 0,"msg" =>"密码错误"];

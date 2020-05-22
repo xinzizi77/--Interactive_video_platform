@@ -42,43 +42,39 @@
                         <div class="form-group row pt-4 align-items-center">
                             <label class="col-2 text-right font-size-large text-gray-7">昵称</label>
                             <div class="col-6">
-                                <input type="text" name="" id="" class="form-control">
+                                <input type="text" name="" id="user_name" class="form-control">
                             </div>
                         </div>
                         <div class="form-group row align-items-center">
                             <label class="col-2 text-right font-size-large text-gray-7">修改密码</label>
                             <div class="col-6">
-                                <input type="text" name="" id="" class="form-control">
+                                <input type="password" name="" id="password1" class="form-control">
                             </div>
                         </div>
                         <div class="form-group row align-items-center">
                             <label class="col-2 text-right font-size-large text-gray-7">确认密码</label>
                             <div class="col-6">
-                                <input type="text" name="" id="" class="form-control">
+                                <input type="password" name="" id="password2" class="form-control">
                             </div>
 
-                            <div class="col-3"><a href="#" class="btn bgcolor text-white py-2">确认修改</a></div>
+                            <div class="col-3"><a href="#" class="btn bgcolor text-white py-2" id="submit">确认修改</a>
+                            </div>
                         </div>
                         <div class="font-size-large border-bottom py-2 mt-5">视频管理</div>
-                        <div class="row border py-3 mt-4">
-                            <div class="col-6">
-                                <p class="py-2 m-0">视频名称：拍摄技巧互动视频</p>
-                                <p class="py-2 m-0">视频类型：大学</p>
-                            </div>
-                            <div class="col-6">
-                                <p class="py-2 m-0">视频状态：待审核</p>
-                                <a href="#" class="btn bgcolor text-white py-2">删除视频</a>
-                            </div>
+                        <div id="videoList">
+                            <!-- <div class="row border py-3 mt-4">
+                                <div class="col-6">
+                                    <p class="py-2 m-0">视频名称：拍摄技巧互动视频</p>
+                                    <p class="py-2 m-0">视频类型：大学</p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="py-2 m-0">视频状态：待审核</p>
+                                    <a href="#" class="btn bgcolor text-white py-2">删除视频</a>
+                                </div>
+                            </div> -->
                         </div>
-                        <div class="row border py-3 mt-4">
-                            <div class="col-6">
-                                <p class="py-2 m-0">视频名称：拍摄技巧互动视频</p>
-                                <p class="py-2 m-0">视频类型：大学</p>
-                            </div>
-                            <div class="col-6">
-                                <p class="py-2 m-0">视频状态：待审核</p>
-                                <a href="#" class="btn bgcolor text-white py-2">删除视频</a>
-                            </div>
+                        <div class="row justify-content-center d-none" id="noVideo">
+                            <div class="col font-size-lager py-5 text-center">暂无视频</div>
                         </div>
                     </div>
                 </div>
@@ -93,46 +89,154 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
         //  判断是否登陆
-    $.ajax({
-      url: 'php/session.php',
-      type: "get",
-      dataType: "json",
-      success: function (data) {
-        console.log(data);
-        if (data.code) {
-          $('#usericon').html(`你好，${data.user_name}`)
-        }
-      },
-      error: function (error) {
-        console.log(error)
-      }
-    })
-    
-    //  登出请求
-    $('#logout').click(function () {
-      $.ajax({
-        url: `php/login.php`,
-        dataType: 'json',
-        data: { 'act': 'logout' },
-        type: 'post',
-        success: function (data) {
-          if (data.msg) {
-            swal("成功退出", {
-              icon: "success",
-              buttons: false,
-              timer: 2000
-            }).then((value) => {
-                window.location.href='index.html';
+        $.ajax({
+            url: 'php/session.php',
+            type: "get",
+            dataType: "json",
+            success: function (data) {
+                if (data.code) {
+                    $('#usericon').html(`你好，${data.user_name}`);
+                    $('#user_name').val(data.user_name);
+                    window.localStorage.setItem('user_id', data.user_id);
+                }
+            },
+            error: function (error) {
+                console.log(error)
+            }
+        })
 
+        //  读取用户所有视频
+        $.ajax({
+            url: 'php/videoType.php',
+            type: 'get',
+            dataType: 'json',
+            data: {
+                "user_id": window.localStorage.getItem('user_id')
+            },
+            success: function (data) {
+                $("#videoList").html('');
+                if (data != 0) {
+                    $("#noVideo").addClass('d-none');
+                    for (let i = 0; i < data.length; i++) {
+                        let oHtml = `<div class="row border py-3 mt-4  with-hand" data-id="${data[i].video_id}">
+                                <div class="col-6 ">
+                                    <p class="py-2 m-0">视频名称：${data[i].video_name}</p>
+                                    <p class="py-2 m-0">视频类型：${data[i].video_type}</p>
+                                </div>
+                                <div class="col-6">
+                                <p class="py-2 m-0">视频状态：${data[i].data_status == 1 ? '待审核' : '已发布'}</p>
+                                <a href="#" class="btn bgcolor text-white py-2 delVideo">删除视频</a>
+                            </div>`;
+                        $("#videoList").html($("#videoList").html() + oHtml);
+                    }
+                    // 点击视频跳转
+                    $(".with-hand").click(function () {
+                        let _this = $(this);
+                        let video_id = _this.attr('data-id');
+                        window.open("play.html" + '?id=' + video_id);
+                        event.stopPropagation();
+                    })
+
+                    // 删除视频
+                    $(".delVideo").click(function () {
+                        let _this = $(this);
+                        let parent = _this.parent().parent();
+                        $.ajax({
+                            url: "php/delVideo.php",
+                            type: "GET",
+                            dataType: "json",
+                            data: {
+                                "video_id": parent.attr("data-id")
+                            },
+                            success: function (data) {
+                                if (data.code) {
+                                    swal("删除视频成功", {
+                                        icon: "success",
+                                        buttons: false,
+                                        timer: 2000
+                                    }).then((value) => {
+                                        parent.remove();
+                                    })
+                                }
+                            },
+                            error: function (err) {
+                                console.log(err)
+                            }
+                        })
+                        event.stopPropagation();
+                    })
+
+                } else {
+                    $("#noVideo").removeClass('d-none');
+                }
+            },
+            error: function (err) {
+                console.log(err);
+            }
+        })
+
+        //  登出请求
+        $('#logout').click(function () {
+            $.ajax({
+                url: `php/login.php`,
+                dataType: 'json',
+                data: { 'act': 'logout' },
+                type: 'post',
+                success: function (data) {
+                    if (data.msg) {
+                        swal("成功退出", {
+                            icon: "success",
+                            buttons: false,
+                            timer: 2000
+                        }).then((value) => {
+                            window.localStorage.clear()
+                            window.location.href = 'index.html';
+                        })
+                    }
+
+                },
+                error: function (err) {
+                    window.console.log(err)
+                }
             })
-          }
+        })
 
-        },
-        error: function (err) {
-          window.console.log(err)
-        }
-      })
-    })
+        $("#submit").click(function () {
+            if ($("#password1").val() != $("#password2").val()) {
+                swal("两次密码不相同", {
+                    icon: "error",
+                    buttons: false,
+                    timer: 2000
+                });
+            } else {
+                $.ajax({
+                    url: 'php/modifyUser.php',
+                    dataType: 'json',
+                    type: 'post',
+                    data: {
+                        "user_id": window.localStorage.getItem('user_id'),
+                        "user_name": $("#user_name").val(),
+                        "user_password": $("#password2").val()
+                    },
+                    success: function (data) {
+                        if (data.code) {
+                            window.localStorage.setItem('user_id', $("#user_name").val());
+                            swal("修改成功！", {
+                                icon: "success",
+                                buttons: false,
+                                timer: 2000
+                            }).then(() => {
+                                $("#password1").val("");
+                                $("#password2").val("");
+                            })
+                        }
+                    },
+                    error: function (err) {
+                        console.log(err)
+                    }
+                })
+            }
+        });
 
     </script>
 </body>
